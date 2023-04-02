@@ -1,0 +1,20 @@
+body {
+  background-color: black;
+  color: lime;
+  font-family: "Courier New", monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+#game-container {
+  border: 2px solid lime;
+  padding: 10px;
+}
+
+#game-board {
+  margin: 0;
+  white-space: pre-wrap;
+}
