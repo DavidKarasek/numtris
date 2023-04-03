@@ -57,3 +57,39 @@ body {
   border: none;
   cursor: pointer;
 }
+
+.color-1 {
+  background-color: red;
+}
+
+.color-2 {
+  background-color: orange;
+}
+
+.color-3 {
+  background-color: yellow;
+}
+
+.color-4 {
+  background-color: green;
+}
+
+.color-5 {
+  background-color: blue;
+}
+
+.color-6 {
+  background-color: purple;
+}
+
+.color-7 {
+  background-color: pink;
+}
+
+.color-8 {
+  background-color: brown;
+}
+
+.color-9 {
+  background-color: gray;
+}
