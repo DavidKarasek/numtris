@@ -136,14 +136,34 @@ function createEmptyBoard(rows, cols) {
   return board;
 }
 
+function addPieceValue(piece, num) {
+  if (num >= 2 && num <= 9) {
+    for (let i = 0; i < piece.length; i++) {
+      for (let j = 0; j < piece[i].length; j++) {
+        if (piece[i][j] === 1) {
+          piece[i][j] = num;
+        }
+      }
+    }
+  }
+  return piece;
+}
+
 // Generate a random piece
 function getRandomPiece() {
   const pieceIndex = Math.floor(Math.random() * pieces.length);
   const rotationIndex = Math.floor(Math.random() * pieces[pieceIndex].length);
+  let piece = JSON.parse(JSON.stringify(pieces[pieceIndex][rotationIndex]));
+
+  // If the generated number is between 2-9, replace all the 1's in the shape array with the generated number
+  const num = Math.floor(Math.random() * 9) + 1;
+  piece = addPieceValue(piece, num);
+
   return {
-    shape: pieces[pieceIndex][rotationIndex],
+    shape: piece,
     index: pieceIndex,
     rotationIndex: rotationIndex,
+    value: num,
   };
 }
 
@@ -178,10 +198,10 @@ function isValidMove(piece, position) {
 function updateBoard(piece, position) {
   for (let y = 0; y < piece.shape.length; y++) {
     for (let x = 0; x < piece.shape[y].length; x++) {
-      if (piece.shape[y][x] === 1) {
+      if (piece.shape[y][x] >= 1) {
         const boardX = position.x + x;
         const boardY = position.y + y;
-        board[boardY][boardX] = "X";
+        board[boardY][boardX] = piece.shape[y][x];
       }
     }
   }
@@ -190,7 +210,6 @@ function updateBoard(piece, position) {
 
 // Move the piece down
 function movePieceDown() {
-  console.log("movePieceDown");
   let newPosition = {
     x: currentPiecePosition.x,
     y: currentPiecePosition.y + 1,
@@ -201,18 +220,6 @@ function movePieceDown() {
     currentPiecePosition.y = newPosition.y;
     newPosition.y += 1;
   }
-
-  // If the piece cannot move down any further, it has landed
-  // updateBoard(currentPiece, currentPiecePosition);
-  // if (isGameOver()) {
-  //   clearInterval(gameInterval);
-  //   alert("Game Over");
-  //   return;
-  // }
-  // currentPiece = nextPiece;
-  // nextPiece = getRandomPiece();
-  // renderNextPiece();
-  // currentPiecePosition = { x: Math.floor(numCols / 2), y: 0 };
 }
 
 // Move the piece left
@@ -230,8 +237,10 @@ function movePiece(amt) {
 function rotatePiece() {
   const nextRotationIndex =
     (currentPiece.rotationIndex + 1) % pieces[currentPiece.index].length;
-  console.log(currentPiece.rotationIndex, nextRotationIndex);
-  const newShape = pieces[currentPiece.index][nextRotationIndex];
+  const newShape = addPieceValue(
+    pieces[currentPiece.index][nextRotationIndex],
+    currentPiece.value
+  );
 
   if (isValidMove({ shape: newShape }, currentPiecePosition)) {
     currentPiece.shape = newShape;
@@ -242,21 +251,30 @@ function rotatePiece() {
 // Clear completed rows
 function clearFullRows() {
   let rowsCleared = 0;
+  let currentScore = 0;
   for (let y = numRows - 1; y >= 0; ) {
-    if (board[y].every((cell) => cell === "X")) {
+    if (board[y].every((cell) => cell >= 1)) {
+      let rowValue = 0;
+      for (let x = 0; x < numCols; x++) {
+        rowValue = rowValue + board[y][x];
+        board[y][x] = " ";
+      }
+      currentScore += rowValue;
+      rowsCleared++;
       for (let y2 = y; y2 > 0; y2--) {
         board[y2] = board[y2 - 1];
       }
       board[0] = new Array(numCols).fill(" ");
-      rowsCleared++;
     } else {
       y--;
     }
   }
 
+  // Update the score
+  score += currentScore * rowsCleared;
+
   // Update the score based on the number of rows cleared
   if (rowsCleared > 0) {
-    score += rowsCleared * 10;
     updateScoreDisplay();
   }
 }
@@ -271,7 +289,7 @@ function renderNextPiece() {
   let output = "";
   for (let y = 0; y < nextPiece.shape.length; y++) {
     for (let x = 0; x < nextPiece.shape[y].length; x++) {
-      output += nextPiece.shape[y][x] === 1 ? "X" : " ";
+      output += nextPiece.shape[y][x] >= 1 ? nextPiece.shape[y][x] : " ";
     }
     output += "\n";
   }
@@ -290,20 +308,22 @@ function renderBoard() {
           cellIndex < currentPiece.shape[rowIndex].length;
           cellIndex++
         ) {
-          if (currentPiece.shape[rowIndex][cellIndex] === 0) {
-            continue;
-          }
+          if (currentPiece.shape[rowIndex][cellIndex] >= 1) {
+            const pieceX = currentPiecePosition.x + cellIndex;
+            const pieceY = currentPiecePosition.y + rowIndex;
 
-          const pieceX = currentPiecePosition.x + cellIndex;
-          const pieceY = currentPiecePosition.y + rowIndex;
-
-          if (pieceX === x && pieceY === y) {
-            isCurrentPiece = true;
+            if (pieceX === x && pieceY === y) {
+              isCurrentPiece = true;
+            }
           }
         }
       }
 
-      output += isCurrentPiece ? "X" : board[y][x];
+      output += isCurrentPiece
+        ? currentPiece.shape[y - currentPiecePosition.y][
+            x - currentPiecePosition.x
+          ]
+        : board[y][x];
     }
     output += "\n";
   }
@@ -325,7 +345,7 @@ function updateGame() {
       // clearInterval(gameInterval);
       score = 0;
       updateScoreDisplay();
-      alert("Game Over");
+      // alert("Game Over");
       return;
     }
     currentPiece = nextPiece;
