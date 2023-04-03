@@ -1,10 +1,16 @@
-const gameBoard = document.getElementById("game-board");
+const canvas = document.getElementById("game-board");
 const nextPieceDisplay = document.getElementById("next-piece");
 
 // Initialize game variables
 const numRows = 20;
 const numCols = 10;
 const board = createEmptyBoard(numRows, numCols);
+
+const cellSize = 20;
+canvas.width = numCols * cellSize;
+canvas.height = numRows * cellSize;
+nextPieceDisplay.width = 4 * cellSize;
+nextPieceDisplay.height = 4 * cellSize;
 
 // Define the Tetris pieces
 const pieces = [
@@ -120,6 +126,7 @@ function init() {
   currentPiecePosition = { x: numCols / 2, y: 0 };
   // gameInterval = setInterval(updateGame, 500);
   updateGame();
+  renderNextPiece();
 }
 
 function updateScoreDisplay() {
@@ -134,6 +141,25 @@ function createEmptyBoard(rows, cols) {
     board.push(new Array(cols).fill(" "));
   }
   return board;
+}
+
+function getColorForValue(value) {
+  const neonPinkGradient = ["#ff4dff", "#ff00ff", "#cc00cc"];
+  const neonBlueGradient = ["#00bfff", "#0080ff", "#0066cc"];
+  const neonGreenGradient = ["#00ff00", "#00cc00", "#009900"];
+
+  if (value >= 1 && value <= 3) {
+    const index = Math.floor(((value - 1) / 3) * neonPinkGradient.length);
+    return neonPinkGradient[index];
+  } else if (value >= 4 && value <= 6) {
+    const index = Math.floor(((value - 4) / 3) * neonBlueGradient.length);
+    return neonBlueGradient[index];
+  } else if (value >= 7 && value <= 9) {
+    const index = Math.floor(((value - 7) / 3) * neonGreenGradient.length);
+    return neonGreenGradient[index];
+  }
+
+  return "#333"; // default color
 }
 
 function addPieceValue(piece, num) {
@@ -286,48 +312,114 @@ function isGameOver() {
 }
 
 function renderNextPiece() {
-  let output = "";
+  const nextPieceContext = nextPieceDisplay.getContext("2d");
+
+  // Clear the next piece canvas
+  nextPieceContext.clearRect(
+    0,
+    0,
+    nextPieceDisplay.width,
+    nextPieceDisplay.height
+  );
+
   for (let y = 0; y < nextPiece.shape.length; y++) {
     for (let x = 0; x < nextPiece.shape[y].length; x++) {
-      output += nextPiece.shape[y][x] >= 1 ? nextPiece.shape[y][x] : " ";
+      if (nextPiece.shape[y][x] >= 1) {
+        nextPieceContext.fillStyle = getColorForValue(nextPiece.shape[y][x]);
+        nextPieceContext.fillRect(
+          x * cellSize,
+          y * cellSize,
+          cellSize,
+          cellSize
+        );
+        nextPieceContext.strokeStyle = "#333";
+        nextPieceContext.strokeRect(
+          x * cellSize,
+          y * cellSize,
+          cellSize,
+          cellSize
+        );
+
+        // Center the number in the box
+        nextPieceContext.fillStyle = "white";
+        nextPieceContext.font = "bold 16px Arial";
+        nextPieceContext.textAlign = "center";
+        nextPieceContext.textBaseline = "middle";
+        nextPieceContext.fillText(
+          nextPiece.shape[y][x],
+          x * cellSize + cellSize / 2,
+          y * cellSize + cellSize / 2
+        );
+      }
     }
-    output += "\n";
   }
-  nextPieceDisplay.textContent = output;
 }
 
 // Render the game board
 function renderBoard() {
-  let output = "";
+  const context = canvas.getContext("2d");
+
+  // Clear the canvas
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw the board
   for (let y = 0; y < numRows; y++) {
     for (let x = 0; x < numCols; x++) {
-      let isCurrentPiece = false;
-      for (let rowIndex = 0; rowIndex < currentPiece.shape.length; rowIndex++) {
-        for (
-          let cellIndex = 0;
-          cellIndex < currentPiece.shape[rowIndex].length;
-          cellIndex++
-        ) {
-          if (currentPiece.shape[rowIndex][cellIndex] >= 1) {
-            const pieceX = currentPiecePosition.x + cellIndex;
-            const pieceY = currentPiecePosition.y + rowIndex;
+      const cell = board[y][x];
 
-            if (pieceX === x && pieceY === y) {
-              isCurrentPiece = true;
-            }
-          }
-        }
+      if (cell !== " ") {
+        context.fillStyle = getColorForValue(cell);
+        context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        context.strokeStyle = "#333";
+        context.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+
+        // Center the number in the box
+        context.fillStyle = "white";
+        context.font = "bold 16px Arial";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText(
+          cell,
+          x * cellSize + cellSize / 2,
+          y * cellSize + cellSize / 2
+        );
       }
-
-      output += isCurrentPiece
-        ? currentPiece.shape[y - currentPiecePosition.y][
-            x - currentPiecePosition.x
-          ]
-        : board[y][x];
     }
-    output += "\n";
   }
-  gameBoard.textContent = output;
+
+  // Draw the current piece
+  context.fillStyle = getColorForValue(currentPiece.value);
+  for (let y = 0; y < currentPiece.shape.length; y++) {
+    for (let x = 0; x < currentPiece.shape[y].length; x++) {
+      if (currentPiece.shape[y][x] !== 0) {
+        const boardX = currentPiecePosition.x + x;
+        const boardY = currentPiecePosition.y + y;
+        context.fillStyle = getColorForValue(currentPiece.value);
+        context.fillRect(
+          boardX * cellSize,
+          boardY * cellSize,
+          cellSize,
+          cellSize
+        );
+        context.strokeStyle = "#333";
+        context.strokeRect(
+          boardX * cellSize,
+          boardY * cellSize,
+          cellSize,
+          cellSize
+        );
+        context.fillStyle = "white";
+        context.font = "bold 16px Arial";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText(
+          currentPiece.value,
+          boardX * cellSize + cellSize / 2,
+          boardY * cellSize + cellSize / 2 + 2
+        );
+      }
+    }
+  }
 }
 
 // Update the game state
