@@ -1,4 +1,5 @@
 const gameBoard = document.getElementById("game-board");
+const nextPieceDisplay = document.getElementById("next-piece");
 
 // Initialize game variables
 const numRows = 20;
@@ -108,13 +109,22 @@ const pieces = [
 // Game variables
 let currentPiece;
 let currentPiecePosition;
-let gameInterval;
+let nextPiece;
+// let gameInterval;
+let score = 0;
 
 // Initialize the game
 function init() {
   currentPiece = getRandomPiece();
+  nextPiece = getRandomPiece();
   currentPiecePosition = { x: numCols / 2, y: 0 };
-  gameInterval = setInterval(updateGame, 500);
+  // gameInterval = setInterval(updateGame, 500);
+  updateGame();
+}
+
+function updateScoreDisplay() {
+  const scoreValueElement = document.getElementById("score-value");
+  scoreValueElement.textContent = score;
 }
 
 // Create an empty board
@@ -175,36 +185,97 @@ function updateBoard(piece, position) {
       }
     }
   }
+  clearFullRows();
 }
 
 // Move the piece down
 function movePieceDown() {
-  // ...
+  console.log("movePieceDown");
+  let newPosition = {
+    x: currentPiecePosition.x,
+    y: currentPiecePosition.y + 1,
+  };
+
+  // Move the piece down until it is no longer valid
+  while (isValidMove(currentPiece, newPosition)) {
+    currentPiecePosition.y = newPosition.y;
+    newPosition.y += 1;
+  }
+
+  // If the piece cannot move down any further, it has landed
+  // updateBoard(currentPiece, currentPiecePosition);
+  // if (isGameOver()) {
+  //   clearInterval(gameInterval);
+  //   alert("Game Over");
+  //   return;
+  // }
+  // currentPiece = nextPiece;
+  // nextPiece = getRandomPiece();
+  // renderNextPiece();
+  // currentPiecePosition = { x: Math.floor(numCols / 2), y: 0 };
 }
 
 // Move the piece left
-function movePieceLeft() {
-  // ...
-}
-
-// Move the piece right
-function movePieceRight() {
-  // ...
+function movePiece(amt) {
+  const newPosition = {
+    x: currentPiecePosition.x + amt,
+    y: currentPiecePosition.y,
+  };
+  if (isValidMove(currentPiece, newPosition)) {
+    currentPiecePosition.x = newPosition.x;
+  }
 }
 
 // Rotate the piece
 function rotatePiece() {
-  // ...
+  const nextRotationIndex =
+    (currentPiece.rotationIndex + 1) % pieces[currentPiece.index].length;
+  console.log(currentPiece.rotationIndex, nextRotationIndex);
+  const newShape = pieces[currentPiece.index][nextRotationIndex];
+
+  if (isValidMove({ shape: newShape }, currentPiecePosition)) {
+    currentPiece.shape = newShape;
+    currentPiece.rotationIndex = nextRotationIndex;
+  }
 }
 
 // Clear completed rows
-function clearRows() {
-  // ...
+function clearFullRows() {
+  let rowsCleared = 0;
+  for (let y = numRows - 1; y >= 0; ) {
+    if (board[y].every((cell) => cell === "X")) {
+      for (let y2 = y; y2 > 0; y2--) {
+        board[y2] = board[y2 - 1];
+      }
+      board[0] = new Array(numCols).fill(" ");
+      rowsCleared++;
+    } else {
+      y--;
+    }
+  }
+
+  // Update the score based on the number of rows cleared
+  if (rowsCleared > 0) {
+    score += rowsCleared * 10;
+    updateScoreDisplay();
+  }
 }
 
 // Check if the game is over
 function isGameOver() {
-  // ...
+  const startPosition = { x: Math.floor(numCols / 2) - 1, y: 0 };
+  return !isValidMove(currentPiece, startPosition);
+}
+
+function renderNextPiece() {
+  let output = "";
+  for (let y = 0; y < nextPiece.shape.length; y++) {
+    for (let x = 0; x < nextPiece.shape[y].length; x++) {
+      output += nextPiece.shape[y][x] === 1 ? "X" : " ";
+    }
+    output += "\n";
+  }
+  nextPieceDisplay.textContent = output;
 }
 
 // Render the game board
@@ -212,19 +283,25 @@ function renderBoard() {
   let output = "";
   for (let y = 0; y < numRows; y++) {
     for (let x = 0; x < numCols; x++) {
-      const isCurrentPiece = currentPiece.shape.some((row, rowIndex) => {
-        return row.some((cell, cellIndex) => {
-          const pieceX = x - currentPiecePosition.x + cellIndex;
-          const pieceY = y - currentPiecePosition.y + rowIndex;
-          return (
-            pieceX >= 0 &&
-            pieceX < numCols &&
-            pieceY >= 0 &&
-            pieceY < numRows &&
-            cell === 1
-          );
-        });
-      });
+      let isCurrentPiece = false;
+      for (let rowIndex = 0; rowIndex < currentPiece.shape.length; rowIndex++) {
+        for (
+          let cellIndex = 0;
+          cellIndex < currentPiece.shape[rowIndex].length;
+          cellIndex++
+        ) {
+          if (currentPiece.shape[rowIndex][cellIndex] === 0) {
+            continue;
+          }
+
+          const pieceX = currentPiecePosition.x + cellIndex;
+          const pieceY = currentPiecePosition.y + rowIndex;
+
+          if (pieceX === x && pieceY === y) {
+            isCurrentPiece = true;
+          }
+        }
+      }
 
       output += isCurrentPiece ? "X" : board[y][x];
     }
@@ -244,29 +321,42 @@ function updateGame() {
     currentPiecePosition.y++;
   } else {
     updateBoard(currentPiece, currentPiecePosition);
-    clearRows();
     if (isGameOver()) {
-      clearInterval(gameInterval);
+      // clearInterval(gameInterval);
+      score = 0;
+      updateScoreDisplay();
       alert("Game Over");
       return;
     }
-    currentPiece = getRandomPiece();
+    currentPiece = nextPiece;
+    nextPiece = getRandomPiece();
+    renderNextPiece();
     currentPiecePosition = { x: Math.floor(numCols / 2), y: 0 };
   }
   renderBoard();
+
+  const interval = 500 - Math.floor(score / 100) * 50;
+  const clampedInterval = Math.max(100, interval);
+
+  setTimeout(updateGame, clampedInterval);
 }
 
 // Event listeners for keyboard inputs
 document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowDown") {
+  if (e.key === "s") {
     movePieceDown();
-  } else if (e.key === "ArrowLeft") {
-    movePieceLeft();
-  } else if (e.key === "ArrowRight") {
-    movePieceRight();
+  } else if (e.key === "a") {
+    movePiece(-1);
+  } else if (e.key === "d") {
+    movePiece(1);
   } else if (e.key === " ") {
     rotatePiece();
   }
+});
+
+document.getElementById("play-again").addEventListener("click", () => {
+  resetGame();
+  renderBoard();
 });
 
 // Start the game

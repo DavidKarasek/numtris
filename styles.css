@@ -1,6 +1,6 @@
 body {
   background-color: black;
-  color: lime;
+  color: #39FF14;
   font-family: "Courier New", monospace;
   display: flex;
   justify-content: center;
@@ -10,11 +10,50 @@ body {
 }
 
 #game-container {
-  border: 2px solid lime;
-  padding: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-family: monospace;
 }
 
 #game-board {
-  margin: 0;
-  white-space: pre-wrap;
+  white-space: pre;
+  border: 1px solid #39FF14;
+  padding: 5px;
+  margin-bottom: 10px;
+  font-size: 24px;
+  background-image:
+    linear-gradient(0deg, rgba(57, 255, 20, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57, 255, 20, 0.1) 1px, transparent 1px);
+  background-size: calc(100% / 10) calc(100% / 20);
+}
+
+#next-piece {
+  white-space: pre;
+  border: 1px solid #000;
+  padding: 5px;
+  text-align: center;
+  width: 80px; /* Set a fixed width */
+  height: 80px; /* Set a fixed height */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+}
+
+#score {
+  font-family: monospace;
+  font-size: 18px;
+  margin-top: 10px;
+}
+
+#play-again {
+  font-family: monospace;
+  font-size: 18px;
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  cursor: pointer;
 }
