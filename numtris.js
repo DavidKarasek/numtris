@@ -118,6 +118,7 @@ let currentPiecePosition;
 let nextPiece;
 // let gameInterval;
 let score = 0;
+let gamePaused = false;
 
 // Initialize the game
 function init() {
@@ -424,6 +425,10 @@ function renderBoard() {
 
 // Update the game state
 function updateGame() {
+  if (gamePaused) {
+    setTimeout(updateGame, 100);
+    return;
+  }
   if (
     isValidMove(currentPiece, {
       x: currentPiecePosition.x,
@@ -447,8 +452,12 @@ function updateGame() {
   }
   renderBoard();
 
-  const interval = 500 - Math.floor(score / 100) * 50;
-  const clampedInterval = Math.max(100, interval);
+  const baseInterval = 500; // starting interval time
+  const intervalMultiplier = 0.95; // how quickly the interval time decreases
+  const clampedInterval = Math.max(
+    100,
+    baseInterval * Math.pow(intervalMultiplier, score / 100)
+  );
 
   setTimeout(updateGame, clampedInterval);
 }
@@ -463,6 +472,11 @@ document.addEventListener("keydown", (e) => {
     movePiece(1);
   } else if (e.key === " ") {
     rotatePiece();
+  } else if (e.key === "p") {
+    gamePaused = !gamePaused; // Toggle gamePaused variable
+    if (!gamePaused) {
+      updateGame(); // Resume game if it was paused
+    }
   }
 });
 
