@@ -118,6 +118,7 @@ let currentPiecePosition;
 let nextPiece;
 let score = 0;
 let gamePaused = false;
+let lastTouchEnd = 0;
 
 // Initialize the game
 function init() {
@@ -494,6 +495,7 @@ function handleTouchStart(event) {
 }
 
 function handleTouchMove(event) {
+  event.preventDefault();
   if (!startX || !startY) {
     return;
   }
@@ -517,6 +519,11 @@ function handleTouchMove(event) {
 }
 
 function handleTouchEnd(event) {
+  const now = new Date().getTime();
+  if (now - lastTouchEnd <= 300) {
+    event.preventDefault();
+  }
+  lastTouchEnd = now;
   const tapTime = new Date().getTime();
   const timeDiff = tapTime - lastTapTime;
 
