@@ -10,8 +10,11 @@ body {
 }
 
 #game-container {
+  width: 100%;
+  height: 100%;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
   font-family: monospace;
 }
@@ -62,40 +65,4 @@ body {
   color: #fff;
   border: none;
   cursor: pointer;
-}
-
-.color-1 {
-  background-color: red;
-}
-
-.color-2 {
-  background-color: orange;
-}
-
-.color-3 {
-  background-color: yellow;
-}
-
-.color-4 {
-  background-color: green;
-}
-
-.color-5 {
-  background-color: blue;
-}
-
-.color-6 {
-  background-color: purple;
-}
-
-.color-7 {
-  background-color: pink;
-}
-
-.color-8 {
-  background-color: brown;
-}
-
-.color-9 {
-  background-color: gray;
 }

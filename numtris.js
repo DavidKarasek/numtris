@@ -116,7 +116,6 @@ const pieces = [
 let currentPiece;
 let currentPiecePosition;
 let nextPiece;
-// let gameInterval;
 let score = 0;
 let gamePaused = false;
 
@@ -125,7 +124,6 @@ function init() {
   currentPiece = getRandomPiece();
   nextPiece = getRandomPiece();
   currentPiecePosition = { x: numCols / 2, y: 0 };
-  // gameInterval = setInterval(updateGame, 500);
   updateGame();
   renderNextPiece();
 }
@@ -479,6 +477,56 @@ document.addEventListener("keydown", (e) => {
     }
   }
 });
+
+// Add touch event listeners to the canvas
+canvas.addEventListener("touchstart", handleTouchStart, false);
+canvas.addEventListener("touchmove", handleTouchMove, false);
+canvas.addEventListener("touchend", handleTouchEnd, false);
+
+// Initialize touch tracking variables
+let startX,
+  startY,
+  lastTapTime = 0;
+
+function handleTouchStart(event) {
+  startX = event.touches[0].clientX;
+  startY = event.touches[0].clientY;
+}
+
+function handleTouchMove(event) {
+  if (!startX || !startY) {
+    return;
+  }
+
+  const endX = event.touches[0].clientX;
+  const endY = event.touches[0].clientY;
+
+  const diffX = startX - endX;
+  const diffY = startY - endY;
+
+  // Check if the swipe is horizontal or vertical, and move the piece accordingly
+  if (Math.abs(diffX) > Math.abs(diffY)) {
+    movePiece(diffX > 0 ? -1 : 1);
+  } else {
+    movePieceDown();
+  }
+
+  // Reset the touch tracking variables
+  startX = null;
+  startY = null;
+}
+
+function handleTouchEnd(event) {
+  const tapTime = new Date().getTime();
+  const timeDiff = tapTime - lastTapTime;
+
+  if (timeDiff < 300 && timeDiff > 0) {
+    // Double tap detected, call the rotatePiece() function
+    rotatePiece();
+  }
+
+  lastTapTime = tapTime;
+}
 
 document.getElementById("play-again").addEventListener("click", () => {
   resetGame();
